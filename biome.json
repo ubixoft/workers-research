@@ -40,7 +40,8 @@
 				"useButtonType": "off",
 				"noSvgWithoutTitle": "off",
 				"useSemanticElements": "off",
-				"noLabelWithoutControl": "off"
+				"noLabelWithoutControl": "off",
+				"useAltText": "off"
 			},
 			"correctness": {
 				"useJsxKeyInIterable": "off",

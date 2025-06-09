@@ -8,7 +8,11 @@ export const TopBar: FC = (props) => {
 		<header className="bg-white border-b border-gray-200 sticky top-0 z-10">
 			<div className="max-w-6xl mx-auto px-4 py-4">
 				<div className="flex items-center justify-between">
-					<a href="/" className="text-xl font-semibold text-gray-900">
+					<a
+						href="/"
+						className="flex items-center text-xl font-semibold text-gray-900"
+					>
+						<img src="/favicon.svg" width="35" height="35" class="mr-1" />{" "}
 						workers-research
 					</a>
 					{props.children}
@@ -25,7 +29,8 @@ export const Layout: FC = (props) => {
 				<meta charset="UTF-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<title>{props.title || "workers-research"}</title>
-				<script src="https://cdn.tailwindcss.com"></script>
+				<link rel="stylesheet" href="/styles.css" />
+				<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 				<script src="https://unpkg.com/htmx.org@2.0.0"></script>
 				<script src="/core.js"></script>
 			</head>
