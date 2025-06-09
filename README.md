@@ -149,11 +149,14 @@ Follow these steps to set up and run `workers-research` on your Cloudflare accou
 Home page
 ![homepage](https://github.com/G4brym/workers-research/raw/main/assets/images/home.png)
 
-New Research follow up questions
-![homepage](https://github.com/G4brym/workers-research/raw/main/assets/images/new-research.png)
+New Research
+![new-research](https://github.com/G4brym/workers-research/raw/main/assets/images/new-research.png)
+
+Follow up questions
+![follow-up-questions](https://github.com/G4brym/workers-research/raw/main/assets/images/follow-up-questions.png)
 
 Reading a report
-![homepage](https://github.com/G4brym/workers-research/raw/main/assets/images/report.png)
+![research](https://github.com/G4brym/workers-research/raw/main/assets/images/report.png)
 
 ## 📜 License
 
