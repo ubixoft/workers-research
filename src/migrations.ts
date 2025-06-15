@@ -53,4 +53,17 @@ export const migrations: Migration[] = [
 		);
     `,
 	},
+	{
+		name: "0006_fix_research_status_history.sql",
+		sql: `
+		DROP TABLE research_status_history;
+		CREATE TABLE research_status_history (
+			id TEXT PRIMARY KEY,
+			research_id TEXT,
+			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			status_text TEXT,
+			FOREIGN KEY (research_id) REFERENCES researches(id) ON DELETE CASCADE
+		);
+    `,
+	},
 ];
