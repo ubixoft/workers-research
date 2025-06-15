@@ -170,7 +170,10 @@ export async function processSerpResult({
 		});
 		return res.object;
 	} catch (error: any) {
-		if (error.message?.includes("exceeded your current quota")) {
+		if (
+			error.message?.includes("exceeded your current quota") ||
+			error.lastError?.includes("exceeded your current quota")
+		) {
 			console.warn(
 				`Rate limit error in processSerpResult for query "${query}". Retrying with fallback model.`,
 				error,
@@ -229,7 +232,10 @@ export async function generateSerpQueries({
 		});
 		return res.object.queries.slice(0, numQueries);
 	} catch (error: any) {
-		if (error.message?.includes("exceeded your current quota")) {
+		if (
+			error.message?.includes("exceeded your current quota") ||
+			error.lastError?.includes("exceeded your current quota")
+		) {
 			console.warn(
 				`Rate limit error in generateSerpQueries for query "${query}". Retrying with fallback model.`,
 				error,
@@ -275,7 +281,10 @@ export async function writeFinalReport({
 		});
 		text = res.text;
 	} catch (error: any) {
-		if (error.message?.includes("exceeded your current quota")) {
+		if (
+			error.message?.includes("exceeded your current quota") ||
+			error.lastError?.includes("exceeded your current quota")
+		) {
 			console.warn(
 				`Rate limit error in writeFinalReport for prompt "${prompt}". Retrying with fallback model.`,
 				error,
