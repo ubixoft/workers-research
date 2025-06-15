@@ -14,6 +14,7 @@ import {
 	NewResearchQuestions,
 	ResearchDetails,
 	ResearchList,
+	ResearchStatusHistoryDisplay,
 	TopBar,
 } from "./templates/layout";
 import type { ResearchType, ResearchTypeDB } from "./types";
@@ -225,11 +226,12 @@ app.post("/create", async (c) => {
 		})
 		.execute();
 
-	return c.redirect("/");
+	return c.redirect(`/details/${id}`);
 });
 
 app.get("/details/:id", async (c) => {
 	const id = c.req.param("id");
+	const { partial } = c.req.query();
 
 	const qb = new D1QB(c.env.DB);
 	const resp = await qb
@@ -250,11 +252,31 @@ app.get("/details/:id", async (c) => {
 		.replaceAll("```markdown", "")
 		.replaceAll("```", "");
 
-	const research = {
+	let statusHistory: any[] = [];
+	if (resp.results && resp.results.status === 1) {
+		const historyQb = new D1QB(c.env.DB);
+		const historyResult = await historyQb
+			.select<{ status_text: string; timestamp: string }>(
+				"research_status_history",
+			)
+			.where("research_id = ?", id)
+			.orderBy("timestamp desc")
+			.limit(5)
+			.all();
+		statusHistory = historyResult.results || [];
+	}
+
+	const researchProps = {
 		...resp.results,
 		questions: JSON.parse(resp.results.questions as unknown as string),
 		report_html: renderMarkdownReportContent(content),
+		statusHistory: statusHistory,
+		isPartial: partial === "true",
 	};
+
+	if (partial === "true") {
+		return c.html(<ResearchDetails research={researchProps} />);
+	}
 
 	return c.html(
 		<Layout>
@@ -289,8 +311,7 @@ app.get("/details/:id", async (c) => {
 					</a>
 				</div>
 			</TopBar>
-			<ResearchDetails research={research} />
-			<script>loadResearchDetails()</script>
+			<ResearchDetails research={researchProps} />
 		</Layout>,
 	);
 });
@@ -370,7 +391,7 @@ app.post("/re-run", async (c) => {
 		})
 		.execute();
 
-	return c.redirect("/");
+	return c.redirect(`/details/${newResearchData.id}`);
 });
 
 app.post("/delete", async (c) => {
