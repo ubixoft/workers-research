@@ -7,22 +7,21 @@
 
 ## ✨ Features
 
-- **Deep Research Capabilities:** Conduct in-depth research on any topic you can imagine.
-- **Powered by Google Gemini 2.5:** Leverages the advanced reasoning and language capabilities of Google's latest models for high-quality research reports.
-- **Serverless Architecture:** Runs entirely on Cloudflare Workers and Workflows, offering scalability, reliability, and cost-effectiveness.
-- **User-Friendly Dashboard:** Built with Hono and JSX for a reactive and intuitive web interface to manage and view your researches.
-- **No Prompt Compression Needed:** Takes advantage of Gemini 2.5's massive context window, simplifying the architecture and improving report quality.
+- **In-depth Research with Google Gemini 2.5:** Leverages Google's latest models for high-quality research reports.
+- **Serverless on Cloudflare:** Built with Workers and Workflows for scalability, reliability, and cost-effectiveness.
+- **Intuitive Dashboard:** Manage and view research via a Hono/JSX web interface.
+- **Simplified Architecture:** Gemini 2.5's large context window removes the need for prompt compression, enhancing report quality.
 
 ## 🚀 Inspiration and Acknowledgements
 
-This project is heavily inspired by the incredible work of [dzhng](https://github.com/dzhng) and their [deep-research](https://github.com/dzhng/deep-research) project. **A huge thank you and props to dzhng for creating the original concept and codebase that served as the foundation for workers-research.** This project adapts and reimagines the core ideas of deep-research to run seamlessly within the Cloudflare ecosystem, making it more accessible and easier to deploy.
+Inspired by [dzhng's deep-research](https://github.com/dzhng/deep-research). Thank you to dzhng for the original concept. `workers-research` adapts this for the Cloudflare ecosystem.
 
-## 💡 Key Differences from Deep-Research
+## 💡 Key Differences from Original Deep-Research
 
-- **Serverless First with Cloudflare Workers:** The original `deep-research` project is designed to run in Node.js or Docker environments. `workers-research` is built from the ground up for Cloudflare Workers.
-- **Cloudflare Workflows for Reliability:** A significant enhancement is the use of Cloudflare Workflows to manage the research process. This ensures that even complex, multi-step research tasks are reliably completed.
-- **Gemini 2.5 and Simplified Architecture:** Leveraging the extensive 2 million token context window and cost-effectiveness of Google Gemini 2.5, `workers-research` **omits prompt compression techniques** found in the original project. This simplifies the codebase, potentially improves report quality by providing more context to the model, and reduces complexity.
-- **Free Browser Rendering:** `workers-research` utilizes Cloudflare's Browser Rendering, now available on the Workers Free plan with a generous 10 minutes of daily usage, eliminating the need for a paid Cloudflare subscription. This makes deployment more accessible while supporting features like web crawling for research.
+- **Cloudflare Native:** Runs on Cloudflare Workers and Workflows, unlike the Node.js/Docker original.
+- **Enhanced Reliability:** Uses Cloudflare Workflows for robust multi-step research.
+- **Simplified & Efficient:** Leverages Gemini 2.5's large context window, omitting prompt compression for a streamlined design and potentially better reports.
+- **Accessible Crawling:** Utilizes Cloudflare's Browser Rendering (available on the free Workers plan).
 
 ## 🔍 Use Cases
 
@@ -34,14 +33,61 @@ This project is heavily inspired by the incredible work of [dzhng](https://githu
 
 ## 🛠️ Technology Stack
 
-- **Cloudflare Workers:** The core runtime environment for the application.
-- **Cloudflare Workflows:** Manages the research process, ensuring reliable execution and persistence.
-- **Cloudflare D1 Database:** Serverless SQL database to store research data, status, and results.
-- **Browser Rendering:** Web crawling API used to gather information from the internet, now accessible on the Workers Free plan.
-- **Google Gemini 2.5:** The cutting-edge language model from Google AI, responsible for generating research reports and insights.
-- **Cloudflare AI Gateway:** Optional proxy for AI requests, providing caching and enhanced management capabilities.
-- **Hono:** A lightweight web framework for Cloudflare Workers, used for building the dashboard and API endpoints.
-- **workers-qb:** A lightweight query builder for Cloudflare D1, simplifying database interactions.
+- **Cloudflare Workers:** Core runtime environment.
+- **Cloudflare Workflows:** Manages reliable research execution.
+- **Cloudflare D1 Database:** Serverless SQL for research data.
+- **Browser Rendering:** Web crawling (free tier available).
+- **Google Gemini 2.5:** Advanced language model for reports.
+- **Cloudflare AI Gateway (Optional):** Proxy for AI requests (caching, management).
+- **Hono:** Lightweight web framework for dashboard and API.
+- **workers-qb:** Query builder for Cloudflare D1.
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TD
+    B{Cloudflare Worker} -- API Calls --> D[Cloudflare Workflows];
+    B -- Fetches Status/Data --> F[Cloudflare D1 Database];
+    D -- Triggers --> E[Gemini 2.5 API];
+    D -- Stores/Retrieves Research --> F;
+    D -- If Crawling Needed --> G[Browser Rendering API];
+    E -- Report Chunks/Results --> D;
+
+    subgraph "Cloudflare Ecosystem (Backend)"
+        B
+        D
+        F
+        G
+    end
+
+    subgraph "External Services"
+        E
+    end
+
+    style B fill:#ccf,stroke:#333,stroke-width:2px;
+    style D fill:#ccf,stroke:#333,stroke-width:2px;
+    style E fill:#fca,stroke:#333,stroke-width:2px;
+    style F fill:#ccf,stroke:#333,stroke-width:2px;
+    style G fill:#ccf,stroke:#333,stroke-width:2px;
+```
+
+### Research Workflow Diagram
+
+The following diagram illustrates the detailed workflow of the research agent when processing a request:
+
+```mermaid
+graph TD
+    A["User Input: Query, Parameters"] --> B["System: Prepare Full Query & Setup"];
+    B --> C["Start Iterative Research Cycle"];
+    C --> C1["Generate Search Tasks/Queries based on current goal & learnings"];
+    C1 --> C2["Gather Information (Web Search & Content Extraction)"];
+    C2 --> C3["Process Information: Extract Key Learnings & Identify Follow-up Needs"];
+    C3 --> C4["Further Research Iterations Needed? (based on depth/breadth)"];
+    C4 -- Yes --> C1;
+    C4 -- No --> D["Compile All Learnings & Generate Final Report"];
+    D --> E["Store Report & Update Status in Database"];
+    E --> F["Research Complete / Report Available"];
+```
 
 ## 🚦 Getting Started
 
