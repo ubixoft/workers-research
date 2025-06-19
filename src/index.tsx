@@ -1,3 +1,4 @@
+import puppeteer from "@cloudflare/puppeteer";
 import { LoadAPIKeyError, generateObject, generateText } from "ai";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -19,7 +20,6 @@ import {
 } from "./templates/layout";
 import type { ResearchType, ResearchTypeDB } from "./types";
 import { formatDuration, getModel } from "./utils";
-import puppeteer from "@cloudflare/puppeteer";
 
 export { ResearchWorkflow } from "./workflows";
 
@@ -115,6 +115,8 @@ app.get("/", async (c) => {
 });
 
 app.get("/create", async (c) => {
+	const userRags = await c.env.AI.autorag().list();
+
 	return c.html(
 		<Layout>
 			<TopBar>
@@ -125,7 +127,7 @@ app.get("/create", async (c) => {
 					← Back to Reports
 				</a>
 			</TopBar>
-			<CreateResearch />
+			<CreateResearch userRags={userRags} />
 			<script>loadNewResearch()</script>
 		</Layout>,
 	);
@@ -199,6 +201,14 @@ app.post("/create", async (c) => {
 	});
 
 	const initialLearnings = form.get("initial-learnings") as string | undefined;
+	const browseInternetFormValue = form.get("browse_internet");
+	const browse_internet = !!(
+		browseInternetFormValue === "on" ||
+		browseInternetFormValue === "" ||
+		browseInternetFormValue === null
+	); // default to true if present (even as empty string from checked) or not present at all.
+	const autorag_id_form = form.get("autorag_id") as string | null;
+	const autorag_id = autorag_id_form === "" ? null : autorag_id_form;
 
 	const researchData: ResearchType = {
 		id,
@@ -209,19 +219,15 @@ app.post("/create", async (c) => {
 		questions: processedQuestions,
 		status: 1, // Starting status
 		initialLearnings: initialLearnings || "", // Ensure it's a string
+		browse_internet,
+		autorag_id,
 	};
 
-	await c.env.RESEARCH_WORKFLOW.create({
-		id,
-		params: {
-			...researchData,
-			start_ms: Date.now(),
-		},
-	});
-
-	const dbData = {
+	const dbData: ResearchTypeDB = {
 		...researchData,
 		questions: JSON.stringify(researchData.questions),
+		browse_internet: browse_internet ? 1 : 0,
+		autorag_id: autorag_id,
 	};
 
 	const qb = new D1QB(c.env.DB);
@@ -231,6 +237,14 @@ app.post("/create", async (c) => {
 			data: dbData,
 		})
 		.execute();
+
+	await c.env.RESEARCH_WORKFLOW.create({
+		id,
+		params: {
+			...researchData,
+			start_ms: Date.now(),
+		},
+	});
 
 	return c.redirect(`/details/${id}`);
 });
@@ -310,17 +324,54 @@ app.get("/details/:id", async (c) => {
 					</button>
 					<div className="relative inline-block text-left">
 						<div>
-							<button type="button" className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="options-menu" aria-haspopup="true" aria-expanded="true" onClick={`toggleDropdown('${id}')`}>
+							<button
+								type="button"
+								className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+								id="options-menu"
+								aria-haspopup="true"
+								aria-expanded="true"
+								onClick={`toggleDropdown('${id}')`}
+							>
 								Download Report
-								<svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+								<svg
+									className="-mr-1 ml-2 h-5 w-5"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									aria-hidden="true"
+								>
+									<path
+										fillRule="evenodd"
+										d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+										clipRule="evenodd"
+									/>
 								</svg>
 							</button>
 						</div>
-						<div id={`download-dropdown-${id}`} className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-							<div className="py-1" role="none">
-								<a href={`/details/${id}/download/pdf`} download="report.pdf" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Download as PDF</a>
-								<a href={`/details/${id}/download/markdown`} download="report.md" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Download as Markdown</a>
+						<div
+							id={`download-dropdown-${id}`}
+							className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10"
+							role="menu"
+							aria-orientation="vertical"
+							aria-labelledby="options-menu"
+						>
+							<div className="py-1">
+								<a
+									href={`/details/${id}/download/pdf`}
+									download="report.pdf"
+									className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+									role="menuitem"
+								>
+									Download as PDF
+								</a>
+								<a
+									href={`/details/${id}/download/markdown`}
+									download="report.md"
+									className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+									role="menuitem"
+								>
+									Download as Markdown
+								</a>
 							</div>
 						</div>
 					</div>
@@ -351,17 +402,17 @@ app.get("/details/:id/download/pdf", async (c) => {
 	const content = resp.results.result ?? "";
 	const htmlContent = renderMarkdownReportContent(content);
 
-    const browser = await puppeteer.launch(c.env.BROWSER);
-    const page = await browser.newPage();
+	const browser = await puppeteer.launch(c.env.BROWSER);
+	const page = await browser.newPage();
 
-    // // Step 2: Send HTML and CSS to our browser
-    await page.setContent(htmlContent);
+	// // Step 2: Send HTML and CSS to our browser
+	await page.setContent(htmlContent);
 
-    // // Step 3: Generate and return PDF
-    const pdf = await page.pdf({ printBackground: true });
+	// // Step 3: Generate and return PDF
+	const pdf = await page.pdf({ printBackground: true });
 
-    // Close browser since we no longer need it
-    await browser.close();
+	// Close browser since we no longer need it
+	await browser.close();
 
 	c.header("Content-Type", "application/pdf");
 	c.header("Content-Disposition", 'attachment; filename="report.pdf"');

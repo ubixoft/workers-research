@@ -1,4 +1,12 @@
 function loadNewResearch() {
+	// Initial state based on potential pre-checked (though it's not by default here)
+	document.addEventListener("DOMContentLoaded", () => {
+		const useAutoRagCheckbox = document.getElementById("use_autorag_checkbox");
+		if (useAutoRagCheckbox) {
+			toggleAutoRagDropdown(useAutoRagCheckbox.checked);
+		}
+	});
+
 	// HTMX event handlers
 	document.addEventListener("htmx:beforeRequest", (evt) => {
 		const query = document.getElementById("initial-query").value.trim();
@@ -109,6 +117,45 @@ function loadNewResearch() {
 						finalForm.appendChild(answerField);
 					});
 
+					// Ensure browse_internet and autorag_id are included in the final submission
+					const browseInternetCheckbox = document.getElementById(
+						"browse_internet_checkbox",
+					);
+					if (browseInternetCheckbox) {
+						const browseInternetField = document.createElement("input");
+						browseInternetField.type = "hidden";
+						browseInternetField.name = "browse_internet";
+						browseInternetField.value = browseInternetCheckbox.checked
+							? "on"
+							: "off";
+						finalForm.appendChild(browseInternetField);
+					}
+
+					const useAutoRagCheckbox = document.getElementById(
+						"use_autorag_checkbox",
+					);
+					const autoRagSelect = document.getElementById("autorag_id_select");
+					if (
+						useAutoRagCheckbox &&
+						autoRagSelect &&
+						useAutoRagCheckbox.checked
+					) {
+						const autoRagIdField = document.createElement("input");
+						autoRagIdField.type = "hidden";
+						autoRagIdField.name = "autorag_id";
+						autoRagIdField.value = autoRagSelect.value;
+						finalForm.appendChild(autoRagIdField);
+					} else {
+						// If not using AutoRAG, ensure we send an empty value if the field is expected
+						// or make sure no old value is lingering if the field was dynamically added before
+						// For this case, sending "" for autorag_id will be converted to null by the backend.
+						const autoRagIdField = document.createElement("input");
+						autoRagIdField.type = "hidden";
+						autoRagIdField.name = "autorag_id";
+						autoRagIdField.value = "";
+						finalForm.appendChild(autoRagIdField);
+					}
+
 					// Submit the final form
 					finalForm.submit();
 				});
@@ -208,8 +255,22 @@ function deleteItem(id) {
 }
 
 function toggleDropdown(id) {
-  const dropdownElement = document.getElementById(`download-dropdown-${id}`);
-  if (dropdownElement) {
-    dropdownElement.classList.toggle('hidden');
-  }
+	const dropdownElement = document.getElementById(`download-dropdown-${id}`);
+	if (dropdownElement) {
+		dropdownElement.classList.toggle("hidden");
+	}
+}
+
+function toggleAutoRagDropdown(checked) {
+	const dropdown = document.getElementById("autorag_id_dropdown_container");
+	if (dropdown) {
+		dropdown.style.display = checked ? "block" : "none";
+	}
+	const selectElement = document.getElementById("autorag_id_select");
+	if (selectElement) {
+		selectElement.disabled = !checked;
+		if (!checked) {
+			selectElement.value = ""; // Clear selection when hiding
+		}
+	}
 }

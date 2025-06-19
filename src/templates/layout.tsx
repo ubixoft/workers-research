@@ -455,6 +455,47 @@ export const ResearchDetails: FC = (props) => {
 				</div>
 			</div>
 
+			{/* Research Parameters Section */}
+			<div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+				<h3 class="text-lg font-semibold text-gray-800 mb-4">
+					Research Parameters
+				</h3>
+				<div className="space-y-3">
+					<div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100">
+						<span class="text-sm font-medium text-gray-600">Duration:</span>
+						<span class="text-sm text-gray-800">
+							{researchData.duration
+								? formatDuration(researchData.duration)
+								: "N/A"}
+						</span>
+					</div>
+					<div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100">
+						<span class="text-sm font-medium text-gray-600">Depth:</span>
+						<span class="text-sm text-gray-800">{researchData.depth}</span>
+					</div>
+					<div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100">
+						<span class="text-sm font-medium text-gray-600">Breadth:</span>
+						<span class="text-sm text-gray-800">{researchData.breadth}</span>
+					</div>
+					<div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100">
+						<span class="text-sm font-medium text-gray-600">
+							Browse Internet:
+						</span>
+						<span class="text-sm text-gray-800">
+							{researchData.browse_internet === 1 ? "Yes" : "No"}
+						</span>
+					</div>
+					{researchData.autorag_id && researchData.autorag_id !== "" && (
+						<div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100">
+							<span class="text-sm font-medium text-gray-600">AutoRAG ID:</span>
+							<span class="text-sm text-gray-800">
+								{researchData.autorag_id}
+							</span>
+						</div>
+					)}
+				</div>
+			</div>
+
 			{/* Research Context Section - direct child of main */}
 			<div className="mb-8">
 				<details className="group">
@@ -580,7 +621,14 @@ export const ResearchDetails: FC = (props) => {
 	);
 };
 
-export const CreateResearch: FC = () => {
+interface CreateResearchProps {
+	userRags?: { id: string }[];
+}
+
+export const CreateResearch: FC<CreateResearchProps> = (props) => {
+	const { userRags } = props;
+	const hasRags = userRags && userRags.length > 0;
+
 	return (
 		<main class="max-w-4xl mx-auto px-4 py-8">
 			<div class="mb-8">
@@ -636,6 +684,78 @@ export const CreateResearch: FC = () => {
 							and insightful questions.
 						</p>
 					</div>
+
+					{/* Browse Internet Checkbox */}
+					<div class="mb-6">
+						<div class="flex items-center">
+							<input
+								id="browse_internet_checkbox"
+								name="browse_internet"
+								type="checkbox"
+								checked
+								class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+							/>
+							<label
+								htmlFor="browse_internet_checkbox"
+								class="ml-2 block text-sm text-gray-900"
+							>
+								Browse Internet
+							</label>
+						</div>
+					</div>
+
+					{/* AutoRAG Checkbox and Dropdown */}
+					<div class="mb-6">
+						<div class="flex items-center mb-2">
+							<input
+								id="use_autorag_checkbox"
+								name="use_autorag"
+								type="checkbox"
+								class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+								disabled={!hasRags}
+								onChange="toggleAutoRagDropdown(this.checked)"
+							/>
+							<label
+								htmlFor="use_autorag_checkbox"
+								class="ml-2 block text-sm text-gray-900"
+							>
+								Use AutoRAG
+							</label>
+						</div>
+						{!hasRags && (
+							<p class="text-sm text-gray-500">
+								You don't have any AutoRAGs.{" "}
+								{html`<a href='https://google.com' target='_blank' class='text-blue-600 hover:underline'>Click here</a>`}{" "}
+								to create one.
+							</p>
+						)}
+						{hasRags && (
+							<div
+								id="autorag_id_dropdown_container"
+								style="display: none;"
+								class="mt-2"
+							>
+								<label
+									htmlFor="autorag_id_select"
+									class="block text-sm font-medium text-gray-700 mb-1"
+								>
+									Select AutoRAG
+								</label>
+								<select
+									id="autorag_id_select"
+									name="autorag_id"
+									disabled
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+								>
+									<option value="">-- Select an AutoRAG --</option>
+									{userRags.map((rag) => (
+										<option value={rag.id}>{rag.id}</option>
+									))}
+								</select>
+							</div>
+						)}
+					</div>
+
 					<div className="flex">
 						<div className="grow mr-2">
 							<label
@@ -726,6 +846,13 @@ export const CreateResearch: FC = () => {
 					name="initial-learnings"
 					id="initial-learnings-hidden"
 				/>
+				{/* Hidden inputs for browse_internet and autorag_id will be handled by the main form submission logic if needed,
+				    or their values can be picked directly from the form elements by their names.
+				    For HTMX, these form fields will be included if they are inside the hx-include scope.
+				    For the final POST, these will be part of the form if not disabled.
+				    The `final-form` below seems to be for a specific HTMX swap, ensure these new fields are part of that if necessary,
+				    or that the server-side handler for `/create` (POST) correctly reads these new fields.
+				 */}
 			</form>
 		</main>
 	);
