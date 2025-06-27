@@ -6,7 +6,6 @@
 	"type": "module",
 	"files": ["dist", "LICENSE", "README.md"],
 	"scripts": {
-		"build": "tsup src/index.ts --format cjs,esm --external cloudflare:workers",
 		"build-css": "npx @tailwindcss/cli -i ./src/templates/styles.css -o ./src/static/styles.css",
 		"lint": "npx @biomejs/biome check src/ || (npx @biomejs/biome check --write src/; exit 1)",
 		"test": "vitest run"
