@@ -2,6 +2,7 @@
 
 **A serverless, Cloudflare Workers-based Deep Research Agent powered by Google Gemini 2.5.**
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/G4brym/workers-research)
 [![GitHub stars](https://img.shields.io/github/stars/G4brym/workers-research?style=social)](https://github.com/G4brym/workers-research/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/G4brym/workers-research/blob/main/LICENSE)
 
