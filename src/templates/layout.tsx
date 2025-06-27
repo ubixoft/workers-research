@@ -796,7 +796,7 @@ export const CreateResearch: FC<CreateResearchProps> = (props) => {
 						{!hasRags && (
 							<p class="text-sm text-gray-500">
 								You don't have any AutoRAGs.{" "}
-								{html`<a href='https://google.com' target='_blank' class='text-blue-600 hover:underline'>Click here</a>`}{" "}
+								{html`<a href='https://dash.cloudflare.com/?to=/:account/ai/autorag' target='_blank' class='text-blue-600 hover:underline'>Click here</a>`}{" "}
 								to create one.
 							</p>
 						)}
